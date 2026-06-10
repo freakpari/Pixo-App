@@ -1,5 +1,6 @@
 package com.example.pixo
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -19,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.example.pixo.ui.theme.*
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-
 
 val forteFont = FontFamily(Font(R.font.forte))
 val interFont = FontFamily(
@@ -40,6 +41,7 @@ class LandingActivity : ComponentActivity() {
 
 @Composable
 fun LandingScreen() {
+    val context = LocalContext.current
     val gradient = Brush.verticalGradient(
         colors = listOf(Primary7, Secondary4)
     )
@@ -56,6 +58,7 @@ fun LandingScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(116.dp))
+
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "App Logo",
@@ -68,7 +71,6 @@ fun LandingScreen() {
                 fontSize = 64.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = forteFont
-
             )
 
             Spacer(modifier = Modifier.height(144.dp))
@@ -78,14 +80,17 @@ fun LandingScreen() {
                 color = White,
                 fontSize = 32.sp,
                 fontFamily = interFont,
-                fontWeight = FontWeight.Bold            )
+                fontWeight = FontWeight.Bold
+            )
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
-                onClick = { /*  login code later  */ },
+                onClick = {
+                    context.startActivity(Intent(context, LoginActivity::class.java))
+                },
                 modifier = Modifier
-                    .width(350.dp)
+                    .fillMaxWidth()
                     .height(42.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary1),
                 shape = RoundedCornerShape(8.dp)
@@ -102,9 +107,11 @@ fun LandingScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* sign up code later*/ },
+                onClick = {
+                    context.startActivity(Intent(context, SignupActivity::class.java))
+                },
                 modifier = Modifier
-                    .width(350.dp)
+                    .fillMaxWidth()
                     .height(42.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary1),
                 shape = RoundedCornerShape(8.dp)
