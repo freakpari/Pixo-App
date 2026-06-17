@@ -3,135 +3,134 @@ package com.example.pixo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.pixo.data.local.AppDatabase
+import com.example.pixo.data.remote.RetrofitClient
+import com.example.pixo.data.repository.AppRepository
+import com.example.pixo.ui.theme.PixoTheme
+import com.example.pixo.view.*
+import com.example.pixo.viewmodel.AuthViewModel
+import com.example.pixo.viewmodel.AuthViewModelFactory
+import com.example.pixo.viewmodel.NotificationViewModel
+import com.example.pixo.viewmodel.NotificationViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val database = AppDatabase.getDatabase(applicationContext)
+        val apiService = RetrofitClient.instance
+        val repository = AppRepository(apiService, database.notificationDao())
+
+        val authViewModel = ViewModelProvider(this, AuthViewModelFactory(repository))[AuthViewModel::class.java]
+        val notificationViewModel = ViewModelProvider(this, NotificationViewModelFactory(repository))[NotificationViewModel::class.java]
+
         setContent {
-            MainAppStructure()
-        }
-    }
-}
+            PixoTheme {
+                val navController = rememberNavController()
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
 
-@Composable
-fun MainAppStructure() {
-    val navController = rememberNavController()
+                Scaffold(
+                    bottomBar = {
+                        val isBottomBarVisible = currentRoute == Screen.Home.route ||
+                                currentRoute == Screen.Notification.route ||
+                                currentRoute == Screen.Account.route
 
-    Scaffold(
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(65.dp)
-                    .background(Color(0xFF005B94)),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val menuItems = listOf(
-                    Triple(Screen.Account, "Account", "Account"),
-                    Triple(Screen.Home, "Home", "Home"),
-                    Triple(Screen.Notification, "Notification", "Notification")
-                )
-
-                menuItems.forEach { (screen, _, title) ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .clickable {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
+                        if (isBottomBarVisible) {
+                            val selectedScreen = when (currentRoute) {
+                                Screen.Home.route -> NavScreen.HOME
+                                Screen.Account.route -> NavScreen.ACCOUNT
+                                else -> NavScreen.NOTIFICATION
+                            }
+                            BottomBar(
+                                selectedScreen = selectedScreen,
+                                onTabSelected = { selectedTab ->
+                                    val destination = when (selectedTab) {
+                                        NavScreen.HOME -> Screen.Home.route
+                                        NavScreen.ACCOUNT -> Screen.Account.route
+                                        NavScreen.NOTIFICATION -> Screen.Notification.route
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                    if (currentRoute != destination) {
+                                        navController.navigate(destination) {
+                                            popUpTo(Screen.Home.route) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
                                 }
-                            },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                            )
+                        }
+                    }
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = Screen.Landing.route,
+                        modifier = Modifier.padding(innerPadding)
                     ) {
-                        Text(
-                            text = title,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
+                        composable(Screen.Landing.route) {
+                            LandingScreen(
+                                onLoginClick = { navController.navigate(Screen.Login.route) },
+                                onSignupClick = { navController.navigate(Screen.Signup.route) }
+                            )
+                        }
+
+                        composable(Screen.Login.route) {
+                            LoginScreen(
+                                authViewModel = authViewModel,
+                                onBackClick = { navController.popBackStack() },
+                                onLoginSuccess = {
+                                    navController.navigate(Screen.Home.route) {
+                                        popUpTo(Screen.Landing.route) { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
+                        composable(Screen.Signup.route) {
+                            SignupScreen(
+                                authViewModel = authViewModel,
+                                onBackClick = { navController.popBackStack() },
+                                onSignupSuccess = {
+                                    navController.navigate(Screen.Home.route) {
+                                        popUpTo(Screen.Landing.route) { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
+                        composable(Screen.Home.route) {
+                            HomeScreen()
+                        }
+
+                        composable(Screen.Notification.route) {
+                            NotificationScreen(
+                                viewModel = notificationViewModel,
+                                onNotificationClick = {
+                                    navController.navigate(Screen.PostDetail.route)
+                                }
+                            )
+                        }
+
+                        composable(Screen.Account.route) {
+                            AccountScreen()
+                        }
+
+                        composable(Screen.PostDetail.route) {
+                            PostDetailScreen(onBackClick = {
+                                navController.popBackStack()
+                            })
+                        }
                     }
                 }
-            }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            //startDestination = Screen.Home.route, //landing page
-            startDestination = Screen.Notification.route, //notification page for test
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(
-                route = Screen.Home.route,
-                enterTransition = { fadeIn() },
-                exitTransition = { fadeOut() }
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFF5F0FA)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Home Grid Screen\n", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            composable(
-                route = Screen.Account.route,
-                enterTransition = { fadeIn() },
-                exitTransition = { fadeOut() }
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFF5F0FA)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Account & Profile Screen", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            composable(
-                route = Screen.Notification.route,
-                enterTransition = { fadeIn() },
-                exitTransition = { fadeOut() }
-            ) {
-                NotificationScreen(onNotificationClick = {
-                    navController.navigate(Screen.PostDetail.route)
-                })
-            }
-
-            composable(
-                route = Screen.PostDetail.route,
-                enterTransition = { fadeIn() },
-                exitTransition = { fadeOut() }
-            ) {
-                PostDetailScreen(onBackClick = {
-                    navController.popBackStack()
-                })
             }
         }
     }
