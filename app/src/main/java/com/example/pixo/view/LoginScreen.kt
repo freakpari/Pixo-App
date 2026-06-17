@@ -1,9 +1,7 @@
-package com.example.pixo
+package com.example.pixo.view
 
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,30 +19,45 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pixo.R
+import com.example.pixo.data.remote.LoginRequest
 import com.example.pixo.ui.theme.*
-import kotlinx.coroutines.launch
-import android.app.Activity
-
-class LoginActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            PixoTheme {
-                LoginScreen()
-            }
-        }
-    }
-}
+import com.example.pixo.viewmodel.AuthViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    authViewModel: AuthViewModel,
+    onBackClick: () -> Unit,
+    onLoginSuccess: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val gradient = Brush.verticalGradient(colors = listOf(Primary7, Secondary4))
+
+    LaunchedEffect(Unit) {
+        authViewModel.loginResult.collectLatest { response ->
+            isLoading = false
+            if (response != null) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Success!", Toast.LENGTH_SHORT).show()
+                    onLoginSuccess()
+                } else {
+                    Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        authViewModel.errorFlow.collectLatest { error ->
+            isLoading = false
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val myTextFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = Primary8,
@@ -81,7 +94,7 @@ fun LoginScreen() {
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         IconButton(
-                            onClick = { (context as? Activity)?.finish() },
+                            onClick = onBackClick,
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
                                 .size(26.dp)
@@ -113,7 +126,6 @@ fun LoginScreen() {
                         },
                         shape = RoundedCornerShape(12.dp),
                         colors = myTextFieldColors
-
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -133,7 +145,6 @@ fun LoginScreen() {
                         },
                         shape = RoundedCornerShape(12.dp),
                         colors = myTextFieldColors
-
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
@@ -142,20 +153,7 @@ fun LoginScreen() {
                         onClick = {
                             if (email.isNotEmpty() && password.isNotEmpty()) {
                                 isLoading = true
-                                scope.launch {
-                                    try {
-                                        val response = RetrofitClient.instance.loginUser(LoginRequest(email, password))
-                                        isLoading = false
-                                        if (response.isSuccessful) {
-                                            Toast.makeText(context, "Success! Token: ${response.body()?.token}", Toast.LENGTH_LONG).show()
-                                        } else {
-                                            Toast.makeText(context, "Login Failed: ${response.code()}", Toast.LENGTH_SHORT).show()
-                                        }
-                                    } catch (e: Exception) {
-                                        isLoading = false
-                                        Toast.makeText(context, "Check Internet Connection", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
+                                authViewModel.login(LoginRequest(email, password))
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -181,7 +179,6 @@ fun LoginScreen() {
                             thickness = 1.dp,
                             color = Color.LightGray
                         )
-
                         Text(
                             text = "or",
                             modifier = Modifier.padding(horizontal = 10.dp),
@@ -189,7 +186,6 @@ fun LoginScreen() {
                             fontSize = 12.sp,
                             fontFamily = interFont
                         )
-
                         HorizontalDivider(
                             modifier = Modifier.weight(1f),
                             thickness = 1.dp,
@@ -221,7 +217,7 @@ fun SocialButton(iconRes: Int, text: String) {
         onClick = { },
         modifier = Modifier.fillMaxWidth().height(50.dp),
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Primary6)
+        border = BorderStroke(1.dp, Primary6)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(painter = painterResource(id = iconRes), contentDescription = null, modifier = Modifier.size(20.dp))

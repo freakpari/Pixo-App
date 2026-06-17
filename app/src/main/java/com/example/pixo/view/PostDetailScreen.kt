@@ -1,4 +1,4 @@
-package com.example.pixo
+package com.example.pixo.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

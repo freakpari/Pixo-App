@@ -1,10 +1,6 @@
-package com.example.pixo
+package com.example.pixo.view
 
-import android.app.Activity
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,30 +18,46 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pixo.R
+import com.example.pixo.data.remote.SignupRequest
 import com.example.pixo.ui.theme.*
-import kotlinx.coroutines.launch
-
-class SignupActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            PixoTheme {
-                SignupScreen()
-            }
-        }
-    }
-}
+import com.example.pixo.viewmodel.AuthViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun SignupScreen() {
+fun SignupScreen(
+    authViewModel: AuthViewModel,
+    onBackClick: () -> Unit,
+    onSignupSuccess: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmpassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val gradient = Brush.verticalGradient(colors = listOf(Primary7, Secondary4))
+
+    LaunchedEffect(Unit) {
+        authViewModel.signupResult.collectLatest { response ->
+            isLoading = false
+            if (response != null) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Account Created!", Toast.LENGTH_SHORT).show()
+                    onSignupSuccess()
+                } else {
+                    Toast.makeText(context, "Signup Failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        authViewModel.errorFlow.collectLatest { error ->
+            isLoading = false
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val myTextFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = Primary8,
@@ -62,7 +74,6 @@ fun SignupScreen() {
 
     Box(modifier = Modifier.fillMaxSize().background(gradient)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
             Row(
                 modifier = Modifier.padding(top = 40.dp, bottom = 30.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -83,7 +94,7 @@ fun SignupScreen() {
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         IconButton(
-                            onClick = { (context as? Activity)?.finish() },
+                            onClick = onBackClick,
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
                                 .size(30.dp)
@@ -146,21 +157,7 @@ fun SignupScreen() {
                         onClick = {
                             if (email.isNotEmpty() && password == confirmpassword) {
                                 isLoading = true
-                                scope.launch {
-                                    try {
-                                        val response = RetrofitClient.instance.signupUser(SignupRequest(email, password))
-                                        isLoading = false
-                                        if (response.isSuccessful) {
-                                            Toast.makeText(context, "Account Created!", Toast.LENGTH_LONG).show()
-                                            (context as? Activity)?.finish()
-                                        } else {
-                                            Toast.makeText(context, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
-                                        }
-                                    } catch (e: Exception) {
-                                        isLoading = false
-                                        Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
+                                authViewModel.signup(SignupRequest(email, password))
                             } else if (password != confirmpassword) {
                                 Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
                             }

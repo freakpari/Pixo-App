@@ -1,9 +1,5 @@
-package com.example.pixo
+package com.example.pixo.view
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,14 +9,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pixo.R
 import com.example.pixo.ui.theme.*
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 
 val forteFont = FontFamily(Font(R.font.forte))
 val interFont = FontFamily(
@@ -28,20 +24,8 @@ val interFont = FontFamily(
     Font(R.font.inter_bold, FontWeight.Bold)
 )
 
-class LandingActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            PixoTheme {
-                LandingScreen()
-            }
-        }
-    }
-}
-
 @Composable
-fun LandingScreen() {
-    val context = LocalContext.current
+fun LandingScreen(onLoginClick: () -> Unit, onSignupClick: () -> Unit) {
     val gradient = Brush.verticalGradient(
         colors = listOf(Primary7, Secondary4)
     )
@@ -86,9 +70,7 @@ fun LandingScreen() {
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
-                onClick = {
-                    context.startActivity(Intent(context, LoginActivity::class.java))
-                },
+                onClick = onLoginClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(42.dp),
@@ -107,9 +89,7 @@ fun LandingScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {
-                    context.startActivity(Intent(context, SignupActivity::class.java))
-                },
+                onClick = onSignupClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(42.dp),
