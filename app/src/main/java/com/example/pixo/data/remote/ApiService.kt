@@ -1,6 +1,7 @@
 package com.example.pixo.data.remote
 
 import com.example.pixo.model.NotificationResponse
+import com.example.pixo.model.PostResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -19,4 +20,7 @@ interface ApiService {
 
     @GET("api/v1/getAllNotif")
     suspend fun getAllNotifications(): List<NotificationResponse>
+
+    @GET("api/v1/getSinglePost")
+    suspend fun getSinglePost(): Response<PostResponse>
 }

@@ -4,10 +4,19 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.example.pixo.model.PostResponse
 
-@Database(entities = [NotificationEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [NotificationEntity::class, PostResponse::class],
+    version = 2,
+    exportSchema = false
+)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
+
     abstract fun notificationDao(): NotificationDao
+    abstract fun postDao(): PostDao
 
     companion object {
         @Volatile
@@ -19,7 +28,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "pixo_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
