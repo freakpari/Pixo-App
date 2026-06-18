@@ -3,10 +3,13 @@ package com.example.pixo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +19,7 @@ import com.example.pixo.data.local.AppDatabase
 import com.example.pixo.data.remote.RetrofitClient
 import com.example.pixo.data.repository.AppRepository
 import com.example.pixo.ui.theme.PixoTheme
+import com.example.pixo.ui.theme.Primary8
 import com.example.pixo.view.*
 import com.example.pixo.viewmodel.AuthViewModel
 import com.example.pixo.viewmodel.AuthViewModelFactory
@@ -26,9 +30,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Primary8.toArgb()),
+            navigationBarStyle = SystemBarStyle.dark(Primary8.toArgb())
+        )
+
         val database = AppDatabase.getDatabase(applicationContext)
         val apiService = RetrofitClient.instance
-        val repository = AppRepository(apiService, database.notificationDao())
+        val repository = AppRepository(apiService, database.notificationDao(), database.postDao())
 
         val authViewModel = ViewModelProvider(this, AuthViewModelFactory(repository))[AuthViewModel::class.java]
         val notificationViewModel = ViewModelProvider(this, NotificationViewModelFactory(repository))[NotificationViewModel::class.java]
