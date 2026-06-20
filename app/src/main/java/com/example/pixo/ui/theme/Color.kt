@@ -12,5 +12,7 @@ val Primary9 = Color(0xFF003B62)
 val Primary10 = Color(0xFF002842)
 
 val Primary11 = Color(0xFF001A2C)
+val Primary12 = Color(0xFFF2EBF7)
 val Secondary4 = Color(0xFFA659DE)
 val White = Color(0xFFFFFFFF)
+val Gray = Color(0xFF7E8E99)
