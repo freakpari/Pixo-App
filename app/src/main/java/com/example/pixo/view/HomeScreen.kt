@@ -208,7 +208,6 @@ fun HeaderSection(
                 cursorColor = Primary8
             )
         )
-        )
     }
 }
 
