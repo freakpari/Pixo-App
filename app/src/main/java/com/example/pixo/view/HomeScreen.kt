@@ -2,6 +2,7 @@ package com.example.pixo.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -15,25 +16,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pixo.model.GalleryItem
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import com.example.pixo.model.HomePost
 import com.example.pixo.ui.theme.Primary12
 import com.example.pixo.viewmodel.HomeViewModel
 import com.example.pixo.ui.theme.Primary7
 import com.example.pixo.ui.theme.Primary8
 import androidx.compose.foundation.border
-import androidx.compose.ui.draw.clip
 import com.example.pixo.R
 import com.example.pixo.ui.theme.Gray
 import com.example.pixo.ui.theme.Primary10
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    onPostClick: () -> Unit,
+    viewModel: HomeViewModel = viewModel()
+) {
     val galleryItems by viewModel.galleryItems.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
@@ -42,7 +49,6 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        CustomStatusBar()
         HeaderSection(
             query = searchQuery,
             onQueryChanged = { viewModel.onSearchQueryChanged(it) }
@@ -50,23 +56,8 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
         Spacer(modifier = Modifier.height(16.dp))
         HomeContent(
             galleryItems = galleryItems,
+            onPostClick = onPostClick,
             modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun CustomStatusBar() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .background(Primary7)
-    ) {
-        HorizontalDivider(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            thickness = 1.dp,
-            color = Primary8
         )
     }
 }
@@ -136,7 +127,8 @@ fun HeaderSection(
 
 @Composable
 fun HomeContent(
-    galleryItems: List<GalleryItem>,
+    galleryItems: List<HomePost>,
+    onPostClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -162,11 +154,16 @@ fun HomeContent(
             ),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(
-                count = Int.MAX_VALUE
-            ) { index ->
-                val item = galleryItems[index % galleryItems.size]
-                WallpaperItem(item)
+            if (galleryItems.isNotEmpty()) {
+                items(
+                    count = Int.MAX_VALUE
+                ) { index ->
+                    val item = galleryItems[index % galleryItems.size]
+                    WallpaperItem(
+                        item = item,
+                        onPostClick = onPostClick
+                    )
+                }
             }
         }
     }
@@ -174,15 +171,28 @@ fun HomeContent(
 
 @Composable
 fun WallpaperItem(
-    item: GalleryItem
+    item: HomePost,
+    onPostClick: () -> Unit
 ) {
-    Column {
+    val context = LocalContext.current
+    val imageLoader = remember {
+        ImageLoader.Builder(context)
+            .components {
+                add(SvgDecoder.Factory())
+            }
+            .build()
+    }
+
+    Column(
+        modifier = Modifier.clickable { onPostClick() }
+    ) {
         Card(
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(item.imageRes),
+            AsyncImage(
+                model = item.image_url,
+                imageLoader = imageLoader,
                 contentDescription = item.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxWidth()
