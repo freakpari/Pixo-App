@@ -7,6 +7,7 @@ import com.example.pixo.data.remote.ApiService
 import com.example.pixo.data.remote.LoginRequest
 import com.example.pixo.data.remote.LoginResponse
 import com.example.pixo.data.remote.SignupRequest
+import com.example.pixo.model.HomePostsResponse
 import com.example.pixo.model.PostResponse
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
@@ -59,5 +60,8 @@ class AppRepository(
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+    suspend fun getAllPosts(): Response<HomePostsResponse> {
+        return apiService.getAllPosts()
     }
 }
