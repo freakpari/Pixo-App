@@ -151,7 +151,15 @@ fun LoginScreen(
 
                     Button(
                         onClick = {
-                            if (email.isNotEmpty() && password.isNotEmpty()) {
+                            val emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$".toRegex()
+
+                            if (email.isEmpty() || password.isEmpty()) {
+                                Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                            } else if (!email.matches(emailRegex)) {
+                                Toast.makeText(context, "Please enter a valid email address", Toast.LENGTH_SHORT).show()
+                            } else if (password.length < 6) {
+                                Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                            } else {
                                 isLoading = true
                                 authViewModel.login(LoginRequest(email, password))
                             }

@@ -155,11 +155,20 @@ fun SignupScreen(
 
                     Button(
                         onClick = {
-                            if (email.isNotEmpty() && password == confirmpassword) {
-                                isLoading = true
-                                authViewModel.signup(SignupRequest(email, password))
+                            val emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$".toRegex()
+                            val passwordRegex = "^(?=.*[0-9])(?=.*[a-zA-Z]).{6,}$".toRegex()
+
+                            if (email.isEmpty() || password.isEmpty() || confirmpassword.isEmpty()) {
+                                Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                            } else if (!email.matches(emailRegex)) {
+                                Toast.makeText(context, "Please enter a valid email address", Toast.LENGTH_SHORT).show()
+                            } else if (!password.matches(passwordRegex)) {
+                                Toast.makeText(context, "Password must be at least 6 characters and contain letters and numbers", Toast.LENGTH_SHORT).show()
                             } else if (password != confirmpassword) {
                                 Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                            } else {
+                                isLoading = true
+                                authViewModel.signup(SignupRequest(email, password))
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
