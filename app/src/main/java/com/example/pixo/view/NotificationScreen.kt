@@ -67,8 +67,7 @@ fun formatRelativeTime(dateString: String): String {
 
 @Composable
 fun NotificationScreen(
-    viewModel: NotificationViewModel,
-    onNotificationClick: () -> Unit = {}
+    viewModel: NotificationViewModel
 ) {
     val notifications by viewModel.notifications.collectAsState()
 
@@ -78,7 +77,7 @@ fun NotificationScreen(
         val activity = context.findActivity()
         activity?.window?.let { window ->
             window.statusBarColor = Primary8.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
         }
     }
 
@@ -135,7 +134,7 @@ fun NotificationScreen(
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(notifications) { item ->
-                    NotificationRow(item, onNotificationClick)
+                    NotificationRow(item)
                     HorizontalDivider(color = Color(0xFFF1F1F1), thickness = 1.dp)
                 }
             }
@@ -144,7 +143,7 @@ fun NotificationScreen(
 }
 
 @Composable
-fun NotificationRow(item: NotificationEntity, onClick: () -> Unit) {
+fun NotificationRow(item: NotificationEntity) {
     val badgeIcon = when {
         item.preview.contains("Liked", ignoreCase = true) -> R.drawable.ic_badge_heart
         item.preview.contains("Commented", ignoreCase = true) -> R.drawable.ic_badge_comment
@@ -155,7 +154,6 @@ fun NotificationRow(item: NotificationEntity, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
