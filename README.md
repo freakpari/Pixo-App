@@ -27,31 +27,6 @@ Pixo is a modern, responsive Android application designed for exploring, searchi
 - **Image Loading:** Coil (with SVG extension support)
 - **Navigation:** Jetpack Compose Navigation
 
----
-
-## Architecture Overview
-
-Pixo strictly follows the separation of concerns principles via the MVVM architecture:
-
-com.example.pixo │ ├── data │ ├── local │ │ ├── AppDatabase.kt # Room database
-initialization │ │ ├── Converters.kt # Gson List converters │ │ ├──
-NotificationDao.kt # Notifications queries │ │ ├── NotificationEntity.kt# Local
-notification table schema │ │ └── PostDao.kt # Local post caching queries │ │ │
-├── remote │ │ ├── ApiService.kt # Retrofit endpoints │ │ └── RetrofitClient.kt
-# Network builder │ │ │ └── repository │ └── AppRepository.kt # Repository
-acting as the single source of truth │ ├── model │ ├── HomePostsResponse.kt #
-Home posts wrapper models │ ├── NotificationResponse.kt # Notification payload
-model │ └── PostResponse.kt # Single post details entity and API model │ ├──
-viewmodel │ ├── AuthViewModel.kt # Signin & Signup state management │ ├──
-HomeViewModel.kt # Grid and search state management │ └──
-NotificationViewModel.kt # Flow-to-state notifications caching management │ └──
-view ├── MainActivity.kt # App entrypoint, bottom-sheet and navigation host ├──
-BottomBar.kt # Navigation bar UI ├── HomeScreen.kt # Grid and Search UI ├──
-LandingScreen.kt # Immersive splash screen UI ├── LoginScreen.kt # Login UI with
-validators ├── SignupScreen.kt # Signup UI with validators ├──
-NotificationScreen.kt # Rendered local notifications UI └── PostDetailScreen.kt
-# Detailed image, interactions and similar grid UI
-
 
 ---
 
